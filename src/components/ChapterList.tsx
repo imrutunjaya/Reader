@@ -1,18 +1,26 @@
 import React, { useState } from 'react';
-import { Clock, User, Tag, BookOpen, Search, Filter } from 'lucide-react';
+import { Clock, User, Tag, BookOpen, Search, Filter, Settings, LogOut } from 'lucide-react';
 import { Chapter } from '../types';
+import { useAuth } from '../hooks/useAuth';
 
 interface ChapterListProps {
   chapters: Chapter[];
   onChapterSelect: (chapter: Chapter) => void;
   theme: 'light' | 'dark' | 'sepia';
+  loading?: boolean;
+  onAdminAccess: () => void;
+  isAuthenticated: boolean;
 }
 
 export const ChapterList: React.FC<ChapterListProps> = ({ 
   chapters, 
   onChapterSelect, 
-  theme 
+  theme,
+  loading = false,
+  onAdminAccess,
+  isAuthenticated
 }) => {
+  const { signOut } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [selectedDifficulty, setSelectedDifficulty] = useState('All');
@@ -46,11 +54,48 @@ export const ChapterList: React.FC<ChapterListProps> = ({
     sepia: 'bg-amber-50 text-amber-900'
   };
 
+  const handleSignOut = async () => {
+    await signOut();
+  };
+
   return (
     <div className={`min-h-screen transition-all duration-500 ${themeClasses[theme]}`}>
       <div className="max-w-6xl mx-auto px-6 py-12">
         {/* Header */}
         <header className="text-center mb-12">
+          <div className="flex justify-between items-start mb-6">
+            <div></div>
+            <div className="flex items-center space-x-2">
+              {isAuthenticated && (
+                <>
+                  <button
+                    onClick={onAdminAccess}
+                    className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  >
+                    <Settings className="w-4 h-4" />
+                    <span>Admin Panel</span>
+                  </button>
+                  <button
+                    onClick={handleSignOut}
+                    className="flex items-center space-x-2 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    <span>Sign Out</span>
+                  </button>
+                </>
+              )}
+              {!isAuthenticated && (
+                <button
+                  onClick={onAdminAccess}
+                  className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  <Settings className="w-4 h-4" />
+                  <span>Admin Login</span>
+                </button>
+              )}
+            </div>
+          </div>
+          
           <h1 className="text-5xl md:text-6xl font-bold mb-4 text-gray-900 dark:text-gray-100 sepia:text-amber-900">
             Knowledge Library
           </h1>
@@ -102,90 +147,102 @@ export const ChapterList: React.FC<ChapterListProps> = ({
           </div>
         </div>
 
+        {/* Loading State */}
+        {loading && (
+          <div className="text-center py-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600 dark:text-gray-400 sepia:text-amber-700">Loading chapters...</p>
+          </div>
+        )}
+
         {/* Results Count */}
-        <div className="text-center mb-8">
-          <p className="text-gray-600 dark:text-gray-400 sepia:text-amber-700">
-            {filteredChapters.length} {filteredChapters.length === 1 ? 'chapter' : 'chapters'} found
-          </p>
-        </div>
+        {!loading && (
+          <div className="text-center mb-8">
+            <p className="text-gray-600 dark:text-gray-400 sepia:text-amber-700">
+              {filteredChapters.length} {filteredChapters.length === 1 ? 'chapter' : 'chapters'} found
+            </p>
+          </div>
+        )}
 
         {/* Chapter Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {filteredChapters.map((chapter) => (
-            <div
-              key={chapter.id}
-              onClick={() => onChapterSelect(chapter)}
-              className="group cursor-pointer bg-white dark:bg-gray-800 sepia:bg-amber-100 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-200 dark:border-gray-700 sepia:border-amber-200 hover:scale-105"
-            >
-              {/* Chapter Header */}
-              <div className="p-6">
-                <div className="flex items-start justify-between mb-4">
-                  <span className={`px-3 py-1 rounded-full text-xs font-medium ${getDifficultyColor(chapter.difficulty)}`}>
-                    {chapter.difficulty}
-                  </span>
-                  <BookOpen className="w-5 h-5 text-gray-400 group-hover:text-blue-500 transition-colors" />
-                </div>
-
-                <h3 className="text-xl font-bold mb-2 text-gray-900 dark:text-gray-100 sepia:text-amber-900 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-                  {chapter.title}
-                </h3>
-
-                {chapter.subtitle && (
-                  <p className="text-sm text-gray-600 dark:text-gray-400 sepia:text-amber-700 mb-4">
-                    {chapter.subtitle}
-                  </p>
-                )}
-
-                {/* Author and Reading Time */}
-                <div className="flex items-center justify-between mb-4 text-sm text-gray-500 dark:text-gray-400 sepia:text-amber-600">
-                  <div className="flex items-center">
-                    <User className="w-4 h-4 mr-1" />
-                    {chapter.author}
-                  </div>
-                  <div className="flex items-center">
-                    <Clock className="w-4 h-4 mr-1" />
-                    {chapter.estimatedReadTime} min
-                  </div>
-                </div>
-
-                {/* Category */}
-                <div className="mb-4">
-                  <span className="inline-block px-3 py-1 bg-blue-100 dark:bg-blue-900/30 sepia:bg-blue-200 text-blue-800 dark:text-blue-300 sepia:text-blue-900 text-xs rounded-full">
-                    {chapter.category}
-                  </span>
-                </div>
-
-                {/* Tags */}
-                <div className="flex flex-wrap gap-2">
-                  {chapter.tags.slice(0, 3).map((tag, index) => (
-                    <span
-                      key={index}
-                      className="inline-flex items-center px-2 py-1 bg-gray-100 dark:bg-gray-700 sepia:bg-amber-200 text-gray-700 dark:text-gray-300 sepia:text-amber-800 text-xs rounded-md"
-                    >
-                      <Tag className="w-3 h-3 mr-1" />
-                      {tag}
+        {!loading && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {filteredChapters.map((chapter) => (
+              <div
+                key={chapter.id}
+                onClick={() => onChapterSelect(chapter)}
+                className="group cursor-pointer bg-white dark:bg-gray-800 sepia:bg-amber-100 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-200 dark:border-gray-700 sepia:border-amber-200 hover:scale-105"
+              >
+                {/* Chapter Header */}
+                <div className="p-6">
+                  <div className="flex items-start justify-between mb-4">
+                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${getDifficultyColor(chapter.difficulty)}`}>
+                      {chapter.difficulty}
                     </span>
-                  ))}
-                  {chapter.tags.length > 3 && (
-                    <span className="text-xs text-gray-500 dark:text-gray-400 sepia:text-amber-600">
-                      +{chapter.tags.length - 3} more
-                    </span>
+                    <BookOpen className="w-5 h-5 text-gray-400 group-hover:text-blue-500 transition-colors" />
+                  </div>
+
+                  <h3 className="text-xl font-bold mb-2 text-gray-900 dark:text-gray-100 sepia:text-amber-900 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                    {chapter.title}
+                  </h3>
+
+                  {chapter.subtitle && (
+                    <p className="text-sm text-gray-600 dark:text-gray-400 sepia:text-amber-700 mb-4">
+                      {chapter.subtitle}
+                    </p>
                   )}
+
+                  {/* Author and Reading Time */}
+                  <div className="flex items-center justify-between mb-4 text-sm text-gray-500 dark:text-gray-400 sepia:text-amber-600">
+                    <div className="flex items-center">
+                      <User className="w-4 h-4 mr-1" />
+                      {chapter.author}
+                    </div>
+                    <div className="flex items-center">
+                      <Clock className="w-4 h-4 mr-1" />
+                      {chapter.estimatedReadTime} min
+                    </div>
+                  </div>
+
+                  {/* Category */}
+                  <div className="mb-4">
+                    <span className="inline-block px-3 py-1 bg-blue-100 dark:bg-blue-900/30 sepia:bg-blue-200 text-blue-800 dark:text-blue-300 sepia:text-blue-900 text-xs rounded-full">
+                      {chapter.category}
+                    </span>
+                  </div>
+
+                  {/* Tags */}
+                  <div className="flex flex-wrap gap-2">
+                    {chapter.tags.slice(0, 3).map((tag, index) => (
+                      <span
+                        key={index}
+                        className="inline-flex items-center px-2 py-1 bg-gray-100 dark:bg-gray-700 sepia:bg-amber-200 text-gray-700 dark:text-gray-300 sepia:text-amber-800 text-xs rounded-md"
+                      >
+                        <Tag className="w-3 h-3 mr-1" />
+                        {tag}
+                      </span>
+                    ))}
+                    {chapter.tags.length > 3 && (
+                      <span className="text-xs text-gray-500 dark:text-gray-400 sepia:text-amber-600">
+                        +{chapter.tags.length - 3} more
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Read Button */}
+                <div className="px-6 pb-6">
+                  <button className="w-full py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors font-medium">
+                    Start Reading
+                  </button>
                 </div>
               </div>
-
-              {/* Read Button */}
-              <div className="px-6 pb-6">
-                <button className="w-full py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors font-medium">
-                  Start Reading
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
 
         {/* No Results */}
-        {filteredChapters.length === 0 && (
+        {!loading && filteredChapters.length === 0 && (
           <div className="text-center py-12">
             <BookOpen className="w-16 h-16 text-gray-400 mx-auto mb-4" />
             <h3 className="text-xl font-semibold text-gray-600 dark:text-gray-400 sepia:text-amber-700 mb-2">

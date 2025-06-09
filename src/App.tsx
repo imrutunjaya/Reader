@@ -2,9 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { ChapterList } from './components/ChapterList';
 import { Reader } from './components/Reader';
 import { SettingsPanel } from './components/SettingsPanel';
+import { AdminPanel } from './components/AdminPanel';
+import { AuthModal } from './components/AuthModal';
 import { ProgressBar } from './components/ProgressBar';
 import { ReadingSettings, BookmarkData, Chapter } from './types';
-import { chapters } from './data/sampleContent';
+import { useChapters } from './hooks/useChapters';
+import { useAuth } from './hooks/useAuth';
+import { chapters as fallbackChapters } from './data/sampleContent';
 
 const defaultSettings: ReadingSettings = {
   fontSize: 18,
@@ -15,12 +19,16 @@ const defaultSettings: ReadingSettings = {
 };
 
 function App() {
+  const { user, loading: authLoading } = useAuth();
+  const { chapters: dbChapters, loading: chaptersLoading } = useChapters();
   const [settings, setSettings] = useState<ReadingSettings>(() => {
     const saved = localStorage.getItem('reading-settings');
     return saved ? JSON.parse(saved) : defaultSettings;
   });
   
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isAdminOpen, setIsAdminOpen] = useState(false);
+  const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [readingProgress, setReadingProgress] = useState(0);
   const [wordsRead, setWordsRead] = useState(0);
   const [selectedChapter, setSelectedChapter] = useState<Chapter | null>(null);
@@ -29,6 +37,9 @@ function App() {
     return saved ? JSON.parse(saved) : [];
   });
 
+  // Use database chapters if available, otherwise fallback to static chapters
+  const chapters = dbChapters.length > 0 ? dbChapters : fallbackChapters;
+
   // Apply theme to document
   useEffect(() => {
     const root = document.documentElement;
@@ -36,9 +47,9 @@ function App() {
     
     // Update page title based on theme and current view
     const baseTitles = {
-      light: 'Reading Library',
-      dark: 'Reading Library • Dark Mode',
-      sepia: 'Reading Library • Sepia Mode'
+      light: 'Knowledge Library',
+      dark: 'Knowledge Library • Dark Mode',
+      sepia: 'Knowledge Library • Sepia Mode'
     };
     
     if (selectedChapter) {
@@ -68,6 +79,7 @@ function App() {
 
   const handleChapterSelect = (chapter: Chapter) => {
     setSelectedChapter(chapter);
+    setIsAdminOpen(false); // Close admin panel when viewing a chapter
   };
 
   const handleBackToLibrary = () => {
@@ -101,6 +113,14 @@ function App() {
     }, 2000);
   };
 
+  const handleAdminAccess = () => {
+    if (user) {
+      setIsAdminOpen(true);
+    } else {
+      setIsAuthOpen(true);
+    }
+  };
+
   // Keyboard shortcuts
   useEffect(() => {
     const handleKeydown = (e: KeyboardEvent) => {
@@ -114,6 +134,14 @@ function App() {
         if (!e.ctrlKey && !e.metaKey) {
           e.preventDefault();
           setIsSettingsOpen(prev => !prev);
+        }
+      }
+      
+      // Toggle admin panel with 'A' key (only when authenticated)
+      if ((e.key === 'a' || e.key === 'A') && user) {
+        if (!e.ctrlKey && !e.metaKey) {
+          e.preventDefault();
+          setIsAdminOpen(prev => !prev);
         }
       }
       
@@ -138,7 +166,9 @@ function App() {
       
       // Back to library with 'Escape' key
       if (e.key === 'Escape') {
-        if (isSettingsOpen) {
+        if (isAdminOpen) {
+          setIsAdminOpen(false);
+        } else if (isSettingsOpen) {
           setIsSettingsOpen(false);
         } else if (selectedChapter) {
           handleBackToLibrary();
@@ -148,7 +178,18 @@ function App() {
 
     window.addEventListener('keydown', handleKeydown);
     return () => window.removeEventListener('keydown', handleKeydown);
-  }, [settings.theme, selectedChapter, isSettingsOpen]);
+  }, [settings.theme, selectedChapter, isSettingsOpen, isAdminOpen, user]);
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="relative">
@@ -172,6 +213,9 @@ function App() {
           chapters={chapters}
           onChapterSelect={handleChapterSelect}
           theme={settings.theme}
+          loading={chaptersLoading}
+          onAdminAccess={handleAdminAccess}
+          isAuthenticated={!!user}
         />
       )}
       
@@ -186,10 +230,26 @@ function App() {
         onBookmark={handleBookmark}
         isReading={!!selectedChapter}
       />
+
+      <AdminPanel
+        isOpen={isAdminOpen}
+        onClose={() => setIsAdminOpen(false)}
+        onChapterSelect={handleChapterSelect}
+      />
+
+      <AuthModal
+        isOpen={isAuthOpen}
+        onClose={() => setIsAuthOpen(false)}
+      />
       
       {/* Keyboard shortcuts hint */}
       <div className="fixed bottom-6 left-6 text-xs text-gray-400 dark:text-gray-500 sepia:text-amber-600 bg-white/80 dark:bg-gray-900/80 sepia:bg-amber-50/80 backdrop-blur-sm px-3 py-2 rounded-lg">
         Press <kbd className="px-1 py-0.5 bg-gray-200 dark:bg-gray-700 sepia:bg-amber-200 rounded text-xs">S</kbd> for settings
+        {user && (
+          <>
+            , <kbd className="px-1 py-0.5 bg-gray-200 dark:bg-gray-700 sepia:bg-amber-200 rounded text-xs">A</kbd> for admin
+          </>
+        )}
         {selectedChapter && (
           <>
             , <kbd className="px-1 py-0.5 bg-gray-200 dark:bg-gray-700 sepia:bg-amber-200 rounded text-xs">B</kbd> to bookmark
