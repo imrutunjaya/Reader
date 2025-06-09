@@ -52,7 +52,7 @@ export const ChapterList: React.FC<ChapterListProps> = ({
         {/* Header */}
         <header className="text-center mb-12">
           <h1 className="text-5xl md:text-6xl font-bold mb-4 text-gray-900 dark:text-gray-100 sepia:text-amber-900">
-            Reading Library
+            Knowledge Library
           </h1>
           <p className="text-xl text-gray-600 dark:text-gray-400 sepia:text-amber-700 max-w-2xl mx-auto">
             Discover curated articles and chapters designed for distraction-free reading and deep learning
