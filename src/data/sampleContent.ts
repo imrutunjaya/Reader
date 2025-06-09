@@ -5,7 +5,7 @@ export const chapters: Chapter[] = [
     id: 'mindful-reading',
     title: 'The Art of Mindful Reading',
     subtitle: 'Rediscovering Deep Focus in a Distracted World',
-    author: 'Alexandra Chen',
+    author: 'mrutunjaya chen',
     category: 'Mindfulness',
     tags: ['focus', 'meditation', 'productivity'],
     difficulty: 'Beginner',
