@@ -25,16 +25,16 @@ export const ChapterList: React.FC<ChapterListProps> = ({
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [selectedDifficulty, setSelectedDifficulty] = useState('All');
 
-  const categories = ['All', ...Array.from(new Set(chapters.map(c => c.category)))];
+  const categories = ['All', ...Array.from(new Set(chapters.map(c => c.category || 'Uncategorized')))];
   const difficulties = ['All', 'Beginner', 'Intermediate', 'Advanced'];
 
   const filteredChapters = chapters.filter(chapter => {
-    const matchesSearch = chapter.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         chapter.author.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         chapter.tags.some(tag => tag && typeof tag === 'string' && tag.toLowerCase().includes(searchTerm.toLowerCase()));
+    const matchesSearch = (chapter.title || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         (chapter.author || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         (chapter.tags || []).some(tag => tag && typeof tag === 'string' && tag.toLowerCase().includes(searchTerm.toLowerCase()));
     
-    const matchesCategory = selectedCategory === 'All' || chapter.category === selectedCategory;
-    const matchesDifficulty = selectedDifficulty === 'All' || chapter.difficulty === selectedDifficulty;
+    const matchesCategory = selectedCategory === 'All' || (chapter.category || 'Uncategorized') === selectedCategory;
+    const matchesDifficulty = selectedDifficulty === 'All' || (chapter.difficulty || 'Beginner') === selectedDifficulty;
     
     return matchesSearch && matchesCategory && matchesDifficulty;
   });
@@ -166,7 +166,7 @@ export const ChapterList: React.FC<ChapterListProps> = ({
 
         {/* Chapter Grid */}
         {!loading && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-2 lg:grid-cols-3 gap-8">
             {filteredChapters.map((chapter) => (
               <div
                 key={chapter.id}
@@ -176,14 +176,14 @@ export const ChapterList: React.FC<ChapterListProps> = ({
                 {/* Chapter Header */}
                 <div className="p-6">
                   <div className="flex items-start justify-between mb-4">
-                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${getDifficultyColor(chapter.difficulty)}`}>
-                      {chapter.difficulty}
+                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${getDifficultyColor(chapter.difficulty || 'Beginner')}`}>
+                      {chapter.difficulty || 'Beginner'}
                     </span>
                     <BookOpen className="w-5 h-5 text-gray-400 group-hover:text-blue-500 transition-colors" />
                   </div>
 
                   <h3 className="text-xl font-bold mb-2 text-gray-900 dark:text-gray-100 sepia:text-amber-900 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-                    {chapter.title}
+                    {chapter.title || 'Untitled'}
                   </h3>
 
                   {chapter.subtitle && (
@@ -196,24 +196,24 @@ export const ChapterList: React.FC<ChapterListProps> = ({
                   <div className="flex items-center justify-between mb-4 text-sm text-gray-500 dark:text-gray-400 sepia:text-amber-600">
                     <div className="flex items-center">
                       <User className="w-4 h-4 mr-1" />
-                      {chapter.author}
+                      {chapter.author || 'Unknown Author'}
                     </div>
                     <div className="flex items-center">
                       <Clock className="w-4 h-4 mr-1" />
-                      {chapter.estimatedReadTime} min
+                      {chapter.estimatedReadTime || 0} min
                     </div>
                   </div>
 
                   {/* Category */}
                   <div className="mb-4">
                     <span className="inline-block px-3 py-1 bg-blue-100 dark:bg-blue-900/30 sepia:bg-blue-200 text-blue-800 dark:text-blue-300 sepia:text-blue-900 text-xs rounded-full">
-                      {chapter.category}
+                      {chapter.category || 'Uncategorized'}
                     </span>
                   </div>
 
                   {/* Tags */}
                   <div className="flex flex-wrap gap-2">
-                    {chapter.tags.filter(tag => tag && typeof tag === 'string').slice(0, 3).map((tag, index) => (
+                    {(chapter.tags || []).filter(tag => tag && typeof tag === 'string').slice(0, 3).map((tag, index) => (
                       <span
                         key={index}
                         className="inline-flex items-center px-2 py-1 bg-gray-100 dark:bg-gray-700 sepia:bg-amber-200 text-gray-700 dark:text-gray-300 sepia:text-amber-800 text-xs rounded-md"
@@ -222,9 +222,9 @@ export const ChapterList: React.FC<ChapterListProps> = ({
                         {tag}
                       </span>
                     ))}
-                    {chapter.tags.filter(tag => tag && typeof tag === 'string').length > 3 && (
+                    {(chapter.tags || []).filter(tag => tag && typeof tag === 'string').length > 3 && (
                       <span className="text-xs text-gray-500 dark:text-gray-400 sepia:text-amber-600">
-                        +{chapter.tags.filter(tag => tag && typeof tag === 'string').length - 3} more
+                        +{(chapter.tags || []).filter(tag => tag && typeof tag === 'string').length - 3} more
                       </span>
                     )}
                   </div>
