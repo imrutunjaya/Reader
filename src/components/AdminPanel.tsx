@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, Edit, Trash2, Save, X, Eye, Settings } from 'lucide-react';
+import { Plus, Edit, Trash2, Save, X, Eye, Settings, RefreshCw } from 'lucide-react';
 import { Chapter } from '../types';
 import { useChapters } from '../hooks/useChapters';
 
@@ -32,7 +32,7 @@ const emptyForm: ChapterForm = {
 };
 
 export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose, onChapterSelect }) => {
-  const { chapters, loading, addChapter, updateChapter, deleteChapter } = useChapters();
+  const { chapters, loading, addChapter, updateChapter, deleteChapter, refetch } = useChapters();
   const [editingChapter, setEditingChapter] = useState<Chapter | null>(null);
   const [isCreating, setIsCreating] = useState(false);
   const [form, setForm] = useState<ChapterForm>(emptyForm);
@@ -112,6 +112,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose, onChapt
     setForm(emptyForm);
   };
 
+  const handleRefresh = () => {
+    refetch();
+  };
+
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
       case 'Beginner': return 'bg-green-100 text-green-800';
@@ -125,53 +129,71 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose, onChapt
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-lg shadow-2xl w-full max-w-6xl h-[90vh] flex flex-col">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-7xl h-[90vh] flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b">
-          <div className="flex items-center space-x-2">
-            <Settings className="w-6 h-6 text-blue-600" />
+        <div className="flex items-center justify-between p-6 border-b bg-gradient-to-r from-blue-50 to-purple-50 rounded-t-2xl">
+          <div className="flex items-center space-x-3">
+            <div className="p-2 bg-blue-600 rounded-lg">
+              <Settings className="w-6 h-6 text-white" />
+            </div>
             <h2 className="text-2xl font-bold text-gray-900">Admin Panel</h2>
           </div>
-          <button
-            onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-          >
-            <X className="w-6 h-6 text-gray-600" />
-          </button>
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={handleRefresh}
+              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              title="Refresh chapters"
+            >
+              <RefreshCw className="w-5 h-5 text-gray-600" />
+            </button>
+            <button
+              onClick={onClose}
+              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            >
+              <X className="w-6 h-6 text-gray-600" />
+            </button>
+          </div>
         </div>
 
         <div className="flex flex-1 overflow-hidden">
           {/* Chapter List */}
-          <div className="w-1/2 border-r flex flex-col">
-            <div className="p-4 border-b bg-gray-50">
+          <div className="w-1/2 border-r flex flex-col bg-gray-50">
+            <div className="p-4 border-b bg-white">
               <button
                 onClick={handleCreate}
-                className="w-full flex items-center justify-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                className="w-full flex items-center justify-center space-x-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white px-4 py-3 rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all duration-200 shadow-lg font-medium"
               >
-                <Plus className="w-4 h-4" />
+                <Plus className="w-5 h-5" />
                 <span>Add New Chapter</span>
               </button>
             </div>
 
             <div className="flex-1 overflow-y-auto p-4">
               {loading ? (
-                <div className="text-center py-8 text-gray-500">Loading chapters...</div>
+                <div className="text-center py-8 text-gray-500">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                  Loading chapters...
+                </div>
               ) : chapters.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">No chapters found</div>
+                <div className="text-center py-8 text-gray-500">
+                  <Settings className="w-16 h-16 mx-auto mb-4 text-gray-300" />
+                  <p>No chapters found</p>
+                  <p className="text-sm">Create your first chapter to get started</p>
+                </div>
               ) : (
                 <div className="space-y-3">
                   {chapters.map((chapter) => (
                     <div
                       key={chapter.id}
-                      className={`p-4 border rounded-lg transition-all ${
+                      className={`p-4 border rounded-xl transition-all cursor-pointer ${
                         editingChapter?.id === chapter.id
-                          ? 'border-blue-500 bg-blue-50'
-                          : 'border-gray-200 hover:border-gray-300'
+                          ? 'border-blue-500 bg-blue-50 shadow-md'
+                          : 'border-gray-200 hover:border-gray-300 bg-white hover:shadow-md'
                       }`}
                     >
-                      <div className="flex items-start justify-between mb-2">
-                        <h3 className="font-semibold text-gray-900 line-clamp-2">{chapter.title}</h3>
-                        <div className="flex space-x-1 ml-2">
+                      <div className="flex items-start justify-between mb-3">
+                        <h3 className="font-semibold text-gray-900 line-clamp-2 flex-1 mr-2">{chapter.title}</h3>
+                        <div className="flex space-x-1">
                           <button
                             onClick={() => onChapterSelect(chapter)}
                             className="p-1 text-gray-500 hover:text-blue-600 transition-colors"
@@ -218,7 +240,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose, onChapt
           </div>
 
           {/* Editor */}
-          <div className="w-1/2 flex flex-col">
+          <div className="w-1/2 flex flex-col bg-white">
             {(editingChapter || isCreating) ? (
               <>
                 <div className="p-4 border-b bg-gray-50">
@@ -229,14 +251,14 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose, onChapt
                     <div className="flex space-x-2">
                       <button
                         onClick={handleCancel}
-                        className="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
+                        className="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors font-medium"
                       >
                         Cancel
                       </button>
                       <button
                         onClick={handleSave}
                         disabled={saving}
-                        className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+                        className="flex items-center space-x-2 bg-gradient-to-r from-green-600 to-green-700 text-white px-4 py-2 rounded-lg hover:from-green-700 hover:to-green-800 transition-all duration-200 disabled:opacity-50 font-medium"
                       >
                         <Save className="w-4 h-4" />
                         <span>{saving ? 'Saving...' : 'Save'}</span>
@@ -368,6 +390,7 @@ Regular paragraphs separated by double line breaks"
                 <div className="text-center">
                   <Settings className="w-16 h-16 mx-auto mb-4 text-gray-300" />
                   <p className="text-lg">Select a chapter to edit or create a new one</p>
+                  <p className="text-sm text-gray-400 mt-2">Use the buttons above to get started</p>
                 </div>
               </div>
             )}

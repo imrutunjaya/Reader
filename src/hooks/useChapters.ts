@@ -10,6 +10,8 @@ export const useChapters = () => {
   const fetchChapters = async () => {
     try {
       setLoading(true);
+      setError(null);
+      
       const { data, error } = await supabase
         .from('chapters')
         .select('*')
@@ -17,20 +19,21 @@ export const useChapters = () => {
 
       if (error) throw error;
 
-      const formattedChapters: Chapter[] = data.map(chapter => ({
+      const formattedChapters: Chapter[] = (data || []).map(chapter => ({
         id: chapter.id,
-        title: chapter.title,
+        title: chapter.name || chapter.title || 'Untitled',
         subtitle: chapter.subtitle || undefined,
-        author: chapter.author,
-        content: chapter.content,
-        category: chapter.category,
-        tags: chapter.tags || [],
-        difficulty: chapter.difficulty,
-        estimatedReadTime: chapter.estimated_read_time
+        author: chapter.author || 'Unknown Author',
+        content: chapter.content || '',
+        category: chapter.category || 'Uncategorized',
+        tags: Array.isArray(chapter.tags) ? chapter.tags : [],
+        difficulty: chapter.difficulty || 'Beginner',
+        estimatedReadTime: chapter.estimated_read_time || chapter.estimatedReadTime || 5
       }));
 
       setChapters(formattedChapters);
     } catch (err) {
+      console.error('Error fetching chapters:', err);
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
       setLoading(false);
@@ -42,6 +45,7 @@ export const useChapters = () => {
       const { data, error } = await supabase
         .from('chapters')
         .insert({
+          name: chapter.title,
           title: chapter.title,
           subtitle: chapter.subtitle || null,
           author: chapter.author,
@@ -58,12 +62,12 @@ export const useChapters = () => {
 
       const newChapter: Chapter = {
         id: data.id,
-        title: data.title,
+        title: data.name || data.title,
         subtitle: data.subtitle || undefined,
         author: data.author,
         content: data.content,
         category: data.category,
-        tags: data.tags || [],
+        tags: Array.isArray(data.tags) ? data.tags : [],
         difficulty: data.difficulty,
         estimatedReadTime: data.estimated_read_time
       };
@@ -71,24 +75,44 @@ export const useChapters = () => {
       setChapters(prev => [newChapter, ...prev]);
       return newChapter;
     } catch (err) {
+      console.error('Error adding chapter:', err);
       throw new Error(err instanceof Error ? err.message : 'Failed to add chapter');
     }
   };
 
   const updateChapter = async (id: string, updates: Partial<Omit<Chapter, 'id'>>) => {
     try {
+      const updateData: any = {};
+      
+      if (updates.title) {
+        updateData.name = updates.title;
+        updateData.title = updates.title;
+      }
+      if (updates.subtitle !== undefined) {
+        updateData.subtitle = updates.subtitle || null;
+      }
+      if (updates.author) {
+        updateData.author = updates.author;
+      }
+      if (updates.content) {
+        updateData.content = updates.content;
+      }
+      if (updates.category) {
+        updateData.category = updates.category;
+      }
+      if (updates.tags) {
+        updateData.tags = updates.tags;
+      }
+      if (updates.difficulty) {
+        updateData.difficulty = updates.difficulty;
+      }
+      if (updates.estimatedReadTime) {
+        updateData.estimated_read_time = updates.estimatedReadTime;
+      }
+
       const { data, error } = await supabase
         .from('chapters')
-        .update({
-          ...(updates.title && { title: updates.title }),
-          ...(updates.subtitle !== undefined && { subtitle: updates.subtitle || null }),
-          ...(updates.author && { author: updates.author }),
-          ...(updates.content && { content: updates.content }),
-          ...(updates.category && { category: updates.category }),
-          ...(updates.tags && { tags: updates.tags }),
-          ...(updates.difficulty && { difficulty: updates.difficulty }),
-          ...(updates.estimatedReadTime && { estimated_read_time: updates.estimatedReadTime })
-        })
+        .update(updateData)
         .eq('id', id)
         .select()
         .single();
@@ -97,12 +121,12 @@ export const useChapters = () => {
 
       const updatedChapter: Chapter = {
         id: data.id,
-        title: data.title,
+        title: data.name || data.title,
         subtitle: data.subtitle || undefined,
         author: data.author,
         content: data.content,
         category: data.category,
-        tags: data.tags || [],
+        tags: Array.isArray(data.tags) ? data.tags : [],
         difficulty: data.difficulty,
         estimatedReadTime: data.estimated_read_time
       };
@@ -113,6 +137,7 @@ export const useChapters = () => {
 
       return updatedChapter;
     } catch (err) {
+      console.error('Error updating chapter:', err);
       throw new Error(err instanceof Error ? err.message : 'Failed to update chapter');
     }
   };
@@ -128,6 +153,7 @@ export const useChapters = () => {
 
       setChapters(prev => prev.filter(chapter => chapter.id !== id));
     } catch (err) {
+      console.error('Error deleting chapter:', err);
       throw new Error(err instanceof Error ? err.message : 'Failed to delete chapter');
     }
   };
