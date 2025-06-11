@@ -31,7 +31,7 @@ export const ChapterList: React.FC<ChapterListProps> = ({
   const filteredChapters = chapters.filter(chapter => {
     const matchesSearch = chapter.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          chapter.author.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         chapter.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()));
+                         chapter.tags.some(tag => tag && typeof tag === 'string' && tag.toLowerCase().includes(searchTerm.toLowerCase()));
     
     const matchesCategory = selectedCategory === 'All' || chapter.category === selectedCategory;
     const matchesDifficulty = selectedDifficulty === 'All' || chapter.difficulty === selectedDifficulty;
@@ -213,7 +213,7 @@ export const ChapterList: React.FC<ChapterListProps> = ({
 
                   {/* Tags */}
                   <div className="flex flex-wrap gap-2">
-                    {chapter.tags.slice(0, 3).map((tag, index) => (
+                    {chapter.tags.filter(tag => tag && typeof tag === 'string').slice(0, 3).map((tag, index) => (
                       <span
                         key={index}
                         className="inline-flex items-center px-2 py-1 bg-gray-100 dark:bg-gray-700 sepia:bg-amber-200 text-gray-700 dark:text-gray-300 sepia:text-amber-800 text-xs rounded-md"
@@ -222,9 +222,9 @@ export const ChapterList: React.FC<ChapterListProps> = ({
                         {tag}
                       </span>
                     ))}
-                    {chapter.tags.length > 3 && (
+                    {chapter.tags.filter(tag => tag && typeof tag === 'string').length > 3 && (
                       <span className="text-xs text-gray-500 dark:text-gray-400 sepia:text-amber-600">
-                        +{chapter.tags.length - 3} more
+                        +{chapter.tags.filter(tag => tag && typeof tag === 'string').length - 3} more
                       </span>
                     )}
                   </div>
