@@ -18,8 +18,8 @@ import { chapters as fallbackChapters } from './data/sampleContent';
 const defaultSettings: ReadingSettings = {
   fontSize: 18,
   lineHeight: 1.6,
-  fontFamily: 'Georgia, serif',
-  theme: 'light',
+  fontFamily: 'Inter, system-ui, sans-serif',
+  theme: 'dark',
   showProgress: true
 };
 
@@ -58,21 +58,17 @@ function App() {
   // Apply theme to document
   useEffect(() => {
     const root = document.documentElement;
-    root.className = settings.theme;
+    root.className = 'dark'; // Force dark theme for black glassy design
     
-    // Update page title based on theme and current view
-    const baseTitles = {
-      light: 'Advanced Knowledge Library',
-      dark: 'Advanced Knowledge Library • Dark Mode',
-      sepia: 'Advanced Knowledge Library • Sepia Mode'
-    };
+    // Update page title based on current view
+    const baseTitle = 'Advanced Knowledge Library • Black Glass Edition';
     
     if (selectedChapter) {
-      document.title = `${selectedChapter.title} - ${baseTitles[settings.theme]}`;
+      document.title = `${selectedChapter.title} - ${baseTitle}`;
     } else {
-      document.title = baseTitles[settings.theme];
+      document.title = baseTitle;
     }
-  }, [settings.theme, selectedChapter]);
+  }, [selectedChapter]);
 
   // Save settings to localStorage
   useEffect(() => {
@@ -119,15 +115,30 @@ function App() {
     
     setBookmarks(prev => [...prev, newBookmark]);
     
-    // Show a brief confirmation
+    // Show a brief confirmation with glass morphism styling
     const notification = document.createElement('div');
     notification.textContent = 'Smart bookmark saved with AI insights!';
-    notification.className = 'fixed top-20 right-6 bg-gradient-to-r from-green-500 to-blue-500 text-white px-6 py-3 rounded-xl shadow-2xl z-50 animate-pulse font-medium';
+    notification.className = 'fixed top-20 right-6 glass-card text-white px-6 py-3 z-50 font-medium glow';
+    notification.style.animation = 'fadeInOut 3s ease-in-out forwards';
     document.body.appendChild(notification);
+    
+    // Add fadeInOut animation
+    const style = document.createElement('style');
+    style.textContent = `
+      @keyframes fadeInOut {
+        0% { opacity: 0; transform: translateY(-20px); }
+        20%, 80% { opacity: 1; transform: translateY(0); }
+        100% { opacity: 0; transform: translateY(-20px); }
+      }
+    `;
+    document.head.appendChild(style);
     
     setTimeout(() => {
       if (document.body.contains(notification)) {
         document.body.removeChild(notification);
+      }
+      if (document.head.contains(style)) {
+        document.head.removeChild(style);
       }
     }, 3000);
   };
@@ -252,21 +263,23 @@ function App() {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-50">
+      <div className="min-h-screen animated-bg flex items-center justify-center">
         <div className="text-center">
-          <div className="relative">
-            <div className="animate-spin rounded-full h-16 w-16 border-4 border-purple-200 border-t-purple-600 mx-auto mb-6"></div>
-            <div className="absolute inset-0 rounded-full h-16 w-16 border-4 border-blue-200 border-t-blue-600 mx-auto animate-spin" style={{ animationDirection: 'reverse', animationDuration: '1.5s' }}></div>
+          <div className="relative mb-8">
+            <div className="w-20 h-20 border-4 border-white/20 border-t-white/60 rounded-full animate-spin mx-auto"></div>
+            <div className="absolute inset-0 w-20 h-20 border-4 border-purple-500/20 border-t-purple-500/60 rounded-full animate-spin mx-auto" style={{ animationDirection: 'reverse', animationDuration: '1.5s' }}></div>
           </div>
-          <p className="text-xl text-gray-700 font-medium">Initializing Advanced Reading Experience...</p>
-          <p className="text-sm text-gray-500 mt-2">Loading AI systems and biometric sensors</p>
+          <div className="glass-card px-8 py-6">
+            <p className="text-2xl text-white font-medium mb-2">Initializing Advanced Reading Experience...</p>
+            <p className="text-white/60">Loading AI systems and biometric sensors</p>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="relative">
+    <div className="relative min-h-screen">
       {selectedChapter && (
         <ProgressBar 
           progress={readingProgress} 
@@ -285,14 +298,14 @@ function App() {
             onFocusScore={setFocusScore}
           />
         ) : (
-          <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50 dark:from-gray-900 dark:via-gray-800 dark:to-blue-900">
+          <div className="min-h-screen animated-bg">
             {/* Enhanced Reading Interface */}
             <div className="max-w-4xl mx-auto px-6 py-12">
               <header className="mb-12 text-center">
                 <div className="flex items-center justify-between mb-8">
                   <button
                     onClick={handleBackToLibrary}
-                    className="flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-gray-600 to-gray-700 text-white rounded-xl hover:from-gray-700 hover:to-gray-800 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
+                    className="glass-button px-6 py-3 flex items-center space-x-2 glow-hover"
                   >
                     ← Back to Library
                   </button>
@@ -300,42 +313,42 @@ function App() {
                   <div className="flex items-center space-x-3">
                     <button
                       onClick={() => setIsAnalyticsOpen(true)}
-                      className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+                      className="glass-button px-4 py-2 text-white/80 hover:text-white transition-colors"
                     >
                       📊 Analytics
                     </button>
                     <button
                       onClick={() => setIsBookmarksOpen(true)}
-                      className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+                      className="glass-button px-4 py-2 text-white/80 hover:text-white transition-colors"
                     >
                       🔖 Smart Bookmarks
                     </button>
                     <button
                       onClick={() => setIsVisualizationOpen(true)}
-                      className="px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg hover:from-purple-700 hover:to-pink-700 transition-all"
+                      className="glass-button px-4 py-2 bg-gradient-to-r from-purple-500/20 to-pink-500/20 text-white hover:from-purple-500/30 hover:to-pink-500/30 transition-all"
                     >
                       ✨ Visualize
                     </button>
                     <button
                       onClick={toggleImmersiveMode}
-                      className="px-4 py-2 bg-gradient-to-r from-green-600 to-teal-600 text-white rounded-lg hover:from-green-700 hover:to-teal-700 transition-all"
+                      className="glass-button px-4 py-2 bg-gradient-to-r from-green-500/20 to-teal-500/20 text-white hover:from-green-500/30 hover:to-teal-500/30 transition-all"
                     >
                       🎯 Immersive Mode
                     </button>
                   </div>
                 </div>
                 
-                <h1 className="text-4xl md:text-5xl font-bold mb-4 leading-tight bg-gradient-to-r from-blue-600 via-purple-600 to-blue-800 bg-clip-text text-transparent">
+                <h1 className="text-4xl md:text-5xl font-bold mb-4 leading-tight gradient-text">
                   {selectedChapter.title}
                 </h1>
                 
                 {selectedChapter.subtitle && (
-                  <h2 className="text-xl md:text-2xl text-gray-600 dark:text-gray-400 mb-6 font-light">
+                  <h2 className="text-xl md:text-2xl text-white/70 mb-6 font-light">
                     {selectedChapter.subtitle}
                   </h2>
                 )}
                 
-                <div className="flex items-center justify-center space-x-4 text-sm text-gray-600 dark:text-gray-400 mb-6">
+                <div className="flex items-center justify-center space-x-4 text-sm text-white/60 mb-6">
                   <span>By {selectedChapter.author}</span>
                   <span>•</span>
                   <span>{selectedChapter.estimatedReadTime} min read</span>
@@ -343,9 +356,9 @@ function App() {
                   <span>{selectedChapter.category}</span>
                   <span>•</span>
                   <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                    focusScore >= 80 ? 'bg-green-100 text-green-800' :
-                    focusScore >= 60 ? 'bg-yellow-100 text-yellow-800' :
-                    'bg-red-100 text-red-800'
+                    focusScore >= 80 ? 'bg-green-500/20 text-green-300 border border-green-500/30' :
+                    focusScore >= 60 ? 'bg-yellow-500/20 text-yellow-300 border border-yellow-500/30' :
+                    'bg-red-500/20 text-red-300 border border-red-500/30'
                   }`}>
                     Focus: {Math.round(focusScore)}%
                   </span>
@@ -355,7 +368,7 @@ function App() {
                   {selectedChapter.tags.map((tag, index) => (
                     <span
                       key={index}
-                      className="inline-block px-3 py-1 bg-gradient-to-r from-blue-100 to-purple-100 dark:from-blue-900/30 dark:to-purple-900/30 text-blue-800 dark:text-blue-300 text-sm rounded-full"
+                      className="inline-block px-3 py-1 glass-card text-blue-300 text-sm rounded-full border border-blue-500/30"
                     >
                       {tag}
                     </span>
@@ -364,7 +377,7 @@ function App() {
               </header>
 
               <div 
-                className="prose prose-lg max-w-none transition-all duration-300"
+                className="prose prose-lg max-w-none transition-all duration-300 text-white/90"
                 style={{
                   fontSize: `${settings.fontSize}px`,
                   lineHeight: settings.lineHeight,
@@ -374,7 +387,7 @@ function App() {
                 {selectedChapter.content.split('\n\n').map((paragraph, index) => {
                   if (paragraph.startsWith('## ')) {
                     return (
-                      <h2 key={index} className="text-2xl font-bold mb-6 mt-8 text-gray-900 dark:text-gray-100">
+                      <h2 key={index} className="text-2xl font-bold mb-6 mt-8 text-white">
                         {paragraph.replace('## ', '')}
                       </h2>
                     );
@@ -382,7 +395,7 @@ function App() {
                   
                   if (paragraph.startsWith('**') && paragraph.endsWith('**')) {
                     return (
-                      <h3 key={index} className="text-lg font-semibold mb-4 mt-6 text-gray-800 dark:text-gray-200">
+                      <h3 key={index} className="text-lg font-semibold mb-4 mt-6 text-white/90">
                         {paragraph.replace(/\*\*/g, '')}
                       </h3>
                     );
@@ -390,13 +403,13 @@ function App() {
 
                   const formattedParagraph = paragraph.replace(
                     /\*\*(.*?)\*\*/g, 
-                    '<strong class="font-semibold text-gray-900 dark:text-gray-100">$1</strong>'
+                    '<strong class="font-semibold text-white">$1</strong>'
                   );
 
                   return (
                     <p 
                       key={index} 
-                      className="mb-6 text-gray-700 dark:text-gray-300 leading-relaxed"
+                      className="mb-6 text-white/80 leading-relaxed"
                       dangerouslySetInnerHTML={{ __html: formattedParagraph }}
                     />
                   );
@@ -476,16 +489,16 @@ function App() {
       />
       
       {/* Enhanced Keyboard shortcuts hint */}
-      <div className="fixed bottom-6 left-6 text-xs text-gray-400 dark:text-gray-500 bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm px-4 py-3 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700">
+      <div className="fixed bottom-6 left-6 glass-card text-xs text-white/60 px-4 py-3 glow">
         <div className="grid grid-cols-2 gap-x-6 gap-y-1">
-          <div><kbd className="px-1 py-0.5 bg-gray-200 dark:bg-gray-700 rounded text-xs">S</kbd> Settings</div>
-          {user && <div><kbd className="px-1 py-0.5 bg-gray-200 dark:bg-gray-700 rounded text-xs">A</kbd> Admin</div>}
-          {selectedChapter && <div><kbd className="px-1 py-0.5 bg-gray-200 dark:bg-gray-700 rounded text-xs">B</kbd> Bookmark</div>}
-          <div><kbd className="px-1 py-0.5 bg-gray-200 dark:bg-gray-700 rounded text-xs">T</kbd> Theme</div>
-          <div><kbd className="px-1 py-0.5 bg-gray-200 dark:bg-gray-700 rounded text-xs">N</kbd> Analytics</div>
-          {selectedChapter && <div><kbd className="px-1 py-0.5 bg-gray-200 dark:bg-gray-700 rounded text-xs">V</kbd> Visualize</div>}
-          {selectedChapter && <div><kbd className="px-1 py-0.5 bg-gray-200 dark:bg-gray-700 rounded text-xs">M</kbd> Immersive</div>}
-          <div><kbd className="px-1 py-0.5 bg-gray-200 dark:bg-gray-700 rounded text-xs">O</kbd> Biometric</div>
+          <div><kbd className="px-1 py-0.5 bg-white/20 rounded text-xs">S</kbd> Settings</div>
+          {user && <div><kbd className="px-1 py-0.5 bg-white/20 rounded text-xs">A</kbd> Admin</div>}
+          {selectedChapter && <div><kbd className="px-1 py-0.5 bg-white/20 rounded text-xs">B</kbd> Bookmark</div>}
+          <div><kbd className="px-1 py-0.5 bg-white/20 rounded text-xs">T</kbd> Theme</div>
+          <div><kbd className="px-1 py-0.5 bg-white/20 rounded text-xs">N</kbd> Analytics</div>
+          {selectedChapter && <div><kbd className="px-1 py-0.5 bg-white/20 rounded text-xs">V</kbd> Visualize</div>}
+          {selectedChapter && <div><kbd className="px-1 py-0.5 bg-white/20 rounded text-xs">M</kbd> Immersive</div>}
+          <div><kbd className="px-1 py-0.5 bg-white/20 rounded text-xs">O</kbd> Biometric</div>
         </div>
       </div>
     </div>
